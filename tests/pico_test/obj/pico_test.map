@@ -1,0 +1,84 @@
+Archive member included to satisfy reference by file (symbol)
+
+/opt/riscv/lib/gcc/riscv32-unknown-elf/15.1.0/libgcc.a(div.o)
+                              /home/taesung/spike_cosim2/tests/pico_test/obj/print.o (__udivsi3)
+
+Discarded input sections
+
+ .debug_line    0x00000000      0x153 /opt/riscv/lib/gcc/riscv32-unknown-elf/15.1.0/libgcc.a(div.o)
+ .debug_line_str
+                0x00000000       0x85 /opt/riscv/lib/gcc/riscv32-unknown-elf/15.1.0/libgcc.a(div.o)
+ .debug_info    0x00000000       0x5e /opt/riscv/lib/gcc/riscv32-unknown-elf/15.1.0/libgcc.a(div.o)
+ .debug_abbrev  0x00000000       0x28 /opt/riscv/lib/gcc/riscv32-unknown-elf/15.1.0/libgcc.a(div.o)
+ .debug_aranges
+                0x00000000       0x20 /opt/riscv/lib/gcc/riscv32-unknown-elf/15.1.0/libgcc.a(div.o)
+ .debug_str     0x00000000       0xca /opt/riscv/lib/gcc/riscv32-unknown-elf/15.1.0/libgcc.a(div.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+mem              0x00000000         0x00018000
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.text           0x00000000      0x360
+ start*(.text)
+ *(.text)
+ .text          0x00000000       0xc4 /home/taesung/spike_cosim2/tests/pico_test/obj/start.o
+                0x00000000                _start
+ .text          0x000000c4       0xdc /home/taesung/spike_cosim2/tests/pico_test/obj/print.o
+                0x000000c4                print_chr
+                0x000000d0                print_str
+                0x000000ec                print_dec
+                0x0000016c                print_hex
+ .text          0x000001a0        0x0 /home/taesung/spike_cosim2/tests/pico_test/obj/pico_test.o
+ .text          0x000001a0       0x7e /opt/riscv/lib/gcc/riscv32-unknown-elf/15.1.0/libgcc.a(div.o)
+                0x000001a0                __divsi3
+                0x000001a8                __hidden___udivsi3
+                0x000001a8                __udivsi3
+                0x000001d4                __umodsi3
+                0x000001f8                __modsi3
+ *(*)
+ .data          0x0000021e        0x0 /home/taesung/spike_cosim2/tests/pico_test/obj/start.o
+ .bss           0x0000021e        0x0 /home/taesung/spike_cosim2/tests/pico_test/obj/start.o
+ .riscv.attributes
+                0x0000021e       0x1a /home/taesung/spike_cosim2/tests/pico_test/obj/start.o
+ .data          0x00000238        0x0 /home/taesung/spike_cosim2/tests/pico_test/obj/print.o
+ .bss           0x00000238        0x0 /home/taesung/spike_cosim2/tests/pico_test/obj/print.o
+ *fill*         0x00000238        0x0 
+ .rodata.str1.4
+                0x00000238       0x1f /home/taesung/spike_cosim2/tests/pico_test/obj/print.o
+                                 0x11 (size before relaxing)
+ .comment       0x00000257       0x1a /home/taesung/spike_cosim2/tests/pico_test/obj/print.o
+                                 0x1b (size before relaxing)
+ .note.GNU-stack
+                0x00000271        0x0 /home/taesung/spike_cosim2/tests/pico_test/obj/print.o
+ .riscv.attributes
+                0x00000271       0x1c /home/taesung/spike_cosim2/tests/pico_test/obj/print.o
+ .data          0x0000028d        0x0 /home/taesung/spike_cosim2/tests/pico_test/obj/pico_test.o
+ .bss           0x0000028d        0x0 /home/taesung/spike_cosim2/tests/pico_test/obj/pico_test.o
+ .rodata.str1.4
+                0x0000028d        0x0 /home/taesung/spike_cosim2/tests/pico_test/obj/pico_test.o
+                                  0xb (size before relaxing)
+ *fill*         0x0000028d        0x3 
+ .text.startup  0x00000290       0x80 /home/taesung/spike_cosim2/tests/pico_test/obj/pico_test.o
+                0x00000290                main
+ .comment       0x00000310        0x0 /home/taesung/spike_cosim2/tests/pico_test/obj/pico_test.o
+                                 0x1b (size before relaxing)
+ .note.GNU-stack
+                0x00000310        0x0 /home/taesung/spike_cosim2/tests/pico_test/obj/pico_test.o
+ .riscv.attributes
+                0x00000310       0x1c /home/taesung/spike_cosim2/tests/pico_test/obj/pico_test.o
+ .data          0x0000032c        0x0 /opt/riscv/lib/gcc/riscv32-unknown-elf/15.1.0/libgcc.a(div.o)
+ .bss           0x0000032c        0x0 /opt/riscv/lib/gcc/riscv32-unknown-elf/15.1.0/libgcc.a(div.o)
+ .riscv.attributes
+                0x0000032c       0x34 /opt/riscv/lib/gcc/riscv32-unknown-elf/15.1.0/libgcc.a(div.o)
+                0x00000360                        . = ALIGN (0x4)
+LOAD /home/taesung/spike_cosim2/tests/pico_test/obj/start.o
+LOAD /home/taesung/spike_cosim2/tests/pico_test/obj/print.o
+LOAD /home/taesung/spike_cosim2/tests/pico_test/obj/pico_test.o
+LOAD /opt/riscv/lib/gcc/riscv32-unknown-elf/15.1.0/../../../../riscv32-unknown-elf/lib/libc.a
+LOAD /opt/riscv/lib/gcc/riscv32-unknown-elf/15.1.0/libgcc.a
+OUTPUT(/home/taesung/spike_cosim2/tests/pico_test/obj/firmware.elf elf32-littleriscv)
