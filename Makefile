@@ -139,17 +139,16 @@ tests/%.o: tests/%.S tests/riscv_test.h tests/test_macros.h
 
 
 
-TEST_NAME = pico_test
-#TEST_NAME = arith_basic_test
+#TEST_NAME = pico_test
+TEST_NAME = arith_basic_test
 
 # Compilation & Linking
 build:
-	rm -rf $(TEST_DIR)/obj
-	mkdir $(TEST_DIR)/obj
-	riscv32-unknown-elf-gcc -static -c -march=rv32i -mabi=ilp32 -o $(TEST_DIR)/obj/start.o $(TEST_DIR)/start.S
-	riscv32-unknown-elf-gcc -static -c -march=rv32i -mabi=ilp32 -Os -I./tests -o $(TEST_DIR)/obj/print.o $(TEST_DIR)/print.c
-	riscv32-unknown-elf-gcc -static -c -march=rv32i -mabi=ilp32 -Os -I./tests -o $(TEST_DIR)/obj/pico_test.o $(TEST_DIR)/pico_test.c
-	riscv32-unknown-elf-gcc -march=rv32i -mabi=ilp32 -Os -ffreestanding -nostdlib -Wl,--build-id=none,-Bstatic,-T,$(TEST_DIR)/sections.lds,-Map,tests/pico_test/obj/pico_test.map,--strip-debug \
+	mkdir -p $(TEST_DIR)/obj
+	riscv32-unknown-elf-gcc -static -c -march=rv32im$(subst C,c,$(COMPRESSED_ISA)) -mabi=ilp32 -o $(TEST_DIR)/obj/start.o $(TEST_DIR)/start.S
+	riscv32-unknown-elf-gcc -static -c -march=rv32im$(subst C,c,$(COMPRESSED_ISA)) -mabi=ilp32 -Os -I./tests -o $(TEST_DIR)/obj/print.o $(TEST_DIR)/print.c
+	riscv32-unknown-elf-gcc -static -c -march=rv32im$(subst C,c,$(COMPRESSED_ISA)) -mabi=ilp32 -Os -I./tests -o $(TEST_DIR)/obj/pico_test.o $(TEST_DIR)/pico_test.c
+	riscv32-unknown-elf-gcc -march=rv32i -mabi=ilp32 -Os -ffreestanding -nostdlib -Wl,--build-id=none,-Bstatic,-T,$(TEST_DIR)/sections.lds,-Map,tests/obj/pico_test.map,--strip-debug \
 								   -I./tests \
 								   -o $(TEST_DIR)/obj/firmware.elf $(TEST_DIR)/obj/start.o $(TEST_DIR)/obj/print.o $(TEST_DIR)/obj/pico_test.o \
 								   -lc -lgcc
@@ -167,11 +166,10 @@ build2:
 	@echo " @ TB_HOME = $(TB_HOME)"
 	@echo " @ TEST_DIR = $(TEST_DIR)"
 	@echo " @ TOOLCHAIN_PREFIX = $(TOOLCHAIN_PREFIX)"
-	rm -rf $(TEST_DIR)/obj
-	mkdir $(TEST_DIR)/obj
-	riscv32-unknown-elf-gcc -static -c -march=rv32i -mabi=ilp32 -o $(TEST_DIR)/obj/start.o $(TEST_DIR)/start.S
-	riscv32-unknown-elf-gcc -static -c -march=rv32i -mabi=ilp32 -Os -o $(TEST_DIR)/obj/riscv_arithmetic_basic_test_0.o $(TEST_DIR)/riscv_arithmetic_basic_test_0.S
-	riscv32-unknown-elf-gcc -march=rv32i -mabi=ilp32 -Os -ffreestanding -nostdlib -Wl,--build-id=none,-Bstatic,-T,$(TEST_DIR)/sections.lds,--strip-debug \
+	mkdir -p $(TEST_DIR)/obj
+	riscv32-unknown-elf-gcc -static -c -march=rv32im$(subst C,c,$(COMPRESSED_ISA)) -mabi=ilp32 -o $(TEST_DIR)/obj/start.o $(TEST_DIR)/start_JS.S
+	riscv32-unknown-elf-gcc -static -c -march=rv32im$(subst C,c,$(COMPRESSED_ISA)) -mabi=ilp32 -Os -o $(TEST_DIR)/obj/riscv_arithmetic_basic_test_0.o $(TEST_DIR)/riscv_arithmetic_basic_test_0_JS.S
+	riscv32-unknown-elf-gcc -march=rv32im$(subst C,c,$(COMPRESSED_ISA)) -mabi=ilp32 -Os -ffreestanding -nostdlib -Wl,--build-id=none,-Bstatic,-T,$(TEST_DIR)/sections_JS.lds,--strip-debug \
 								   -I./tests \
 								   -o $(TEST_DIR)/obj/firmware.elf $(TEST_DIR)/obj/start.o $(TEST_DIR)/obj/riscv_arithmetic_basic_test_0.o \
 								   -lc -lgcc
@@ -185,19 +183,31 @@ build2:
 ##  spike --isa=RV32IMC --log-commits /opt/riscv/riscv32-unknown-elf/bin/pk tests/arith_basic_test/obj/firmware.elf > tests/arith_basic_test/obj/firmware_spike.log 2>&1
 
 spikelog:
-	spike -l --log=$(TEST_DIR)/obj/spikelog --isa=rv32imc /opt/riscv/riscv32-unknown-elf/bin/pk $(TEST_DIR)/obj/firmware.elf
-	
-spikeconv:
-	#Pico log
-	python3 scripts/showtrace.py dump/testbench.trace tests/arith_basic_test/obj/firmware.elf | tee dump/tracelog
-	#spike log
-	spike --log-commits --log=dump/log --isa=rv32i /opt/riscv/riscv32-unknown-elf/bin/pk tests/arith_basic_test/obj/firmware.elf 
-	python3 scripts/reg_convert.py dump/log dump/converted_reglog
-	python3 scripts/reg_compare.py dump/converted_reglog dump/reglog	
+	# instruction log
+	spike -l --log=dump/spike_inst_log --isa=rv32imc /opt/riscv/riscv32-unknown-elf/bin/pk tests/arith_basic_test/obj/firmware.elf
+	# reg/mem log
+#spike --log-commits --log=spike_reg_log --isa=RV32IMC /opt/riscv/riscv32-unknown-elf/bin/pk $(TEST_DIR)/obj/firmware.elf
 
+spikelogconv:
+	#spike_*_log -> spike_conv_*_log
+	python3 scripts/convert.py dump/spike_inst_log dump/spike_conv_inst_log
+
+dutlog:
+	#testbench.trace -> tracelog
+	python3 scripts/showtrace.py dump/testbench.trace tests/arith_basic_test/obj/firmware.elf | tee dump/dut_log
+
+compare:
+	# compare dut_log/spike_conv_*_log
+	python3 scripts/compare.py dump/dut_log dump/spike_conv_inst_log 
+
+compareall:
+	spike -l --log=dump/spike_inst_log --isa=rv32imc /opt/riscv/riscv32-unknown-elf/bin/pk tests/arith_basic_test/obj/firmware.elf
+	python3 scripts/convert.py dump/spike_inst_log dump/spike_conv_inst_log
+	python3 scripts/showtrace.py dump/testbench.trace tests/arith_basic_test/obj/firmware.elf | tee dump/dut_log
+	python3 scripts/compare.py dump/dut_log dump/spike_conv_inst_log 
+	
 
 libspikeso:
-	rm -rf scripts/libspike.*
 	# make shared object file
 	g++ scripts/spike_dpi.cc -o scripts/libspike.so -fPIC -shared -std=c++17 \
 					-I/opt/riscv/include -I/opt/riscv/include/riscv -I/opt/riscv/include/fesvr -I/usr/local/include/iverilog -I/usr/share/verilator/include/vltstd \
@@ -208,9 +218,8 @@ libspikeso:
 
 # Spike co-simulation
 sim:
-	rm -rf $(TB_HOME)/dump
-	mkdir $(TB_HOME)/dump
-	iverilog -g2012 -o top/testbench.vvp top/testbench.v top/picorv32.v -DVPI_WRAPPER
+	mkdir -p $(TB_HOME)/dump
+	iverilog -g2012 -o top/testbench.vvp top/testbench.v top/picorv32.v -DVPI_WRAPPER -DCOMPRESSED_ISA
 	vvp -M . -m scripts/libspike top/testbench.vvp +trace +vcd
 
 all:
@@ -220,7 +229,7 @@ all:
 
 
 clean:
-	rm -rf $(TB_HOME)/dump $(TB_HOME)/scripts/libspike.* $(TEST_DIR)/obj
+	rm -rf $(TB_HOME)/dump $(TB_HOME)/scripts/libspike.* $(TEST_DIR)/obj top/testbench.vvp
 
 
 

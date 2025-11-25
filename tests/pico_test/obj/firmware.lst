@@ -1,5 +1,5 @@
 
-/home/taesung/spike_cosim2/tests/pico_test/obj/firmware.elf:     file format elf32-littleriscv
+/home/taesung/RISCV_EX/tests/pico_test/obj/firmware.elf:     file format elf32-littleriscv
 
 
 Disassembly of section .text:
