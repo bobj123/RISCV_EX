@@ -264,7 +264,7 @@ module picorv32_wrapper #(
 
 	initial begin
 		if (!$value$plusargs("firmware=%s", firmware_file)) begin
-			firmware_file = "tests/pico_test/obj/firmware.hex";
+			firmware_file = "tests/arith_basic_test/obj/firmware.hex";
 			//firmware_file = "tests/pico_test/obj/firmware.hex";
 			$display("[DBG] picorv32 firmware_file = %0s", firmware_file);
 		end
@@ -305,30 +305,64 @@ module picorv32_wrapper #(
 
 	// ************** Spike custom functions **************************
 	integer i, j;
+	reg [31:0] cur_pc, cur_instr;
 
-	`ifdef VPI_WRAPPER
 	initial begin
 		@(posedge resetn);
-		$display("At time %.2f:  [ns]", $time);
+		$display("=========================== SPIKE SIMULATION RUN ===========================");
+		$display("Reset is released at time %.1f[ns]", $time);
 		$spike_init("tests/arith_basic_test/obj/firmware.elf");
 		//$spike_init("tests/pico_test/obj/firmware.elf");
 		#10;
-
-		for (j=0; j<1; j++) begin // run command step
-			$spike_get_pc;
+	
+		$spike_run_steps(205500);
+		$spike_get_pc(cur_pc);
+	
+		
+		while (cur_pc != 'h00000000) begin
+			$spike_get_pc(cur_pc);
 			$spike_run_steps(1);
-			for (i=0; i<32; i=i+1) begin
-				$spike_get_reg(i);
-			end
-
-			$spike_get_pc;
-			$spike_run_steps(1);
-			for (i=0; i<32; i=i+1) begin
-				$spike_get_reg(i);
-			end
 		end
+	
+		$display("[Verilog] Current PC value: 0x%08x", cur_pc);
+		
+		/*
+		while (cur_instr != 'h00004081) begin
+			$spike_get_pc(cur_pc);
+			$spike_run_steps(1);
+			$spike_get_instr(cur_pc, cur_instr);
+		end
+		*/
+		for (i=0; i<10; i++) begin
+			$spike_get_pc(cur_pc);
+			$spike_run_steps(1);
+			$spike_get_instr(cur_pc, cur_instr);
+		end
+
+		/*
+		$spike_get_pc(cur_pc);
+		$display("[Verilog] Current PC value: 0x%08x", cur_pc);
+		$spike_run_steps(1);
+
+		$spike_get_pc(cur_pc);
+		$display("[Verilog] Current PC value: 0x%08x", cur_pc);
+		$spike_run_steps(1);
+		*/
+	
+		/*
+		for (j=0; j<3; j++) begin // run command step
+			$spike_get_pc(cur_pc);
+			$spike_run_steps(1);
+			$spike_get_instr(cur_pc, cur_instr);
+			//for (i=0; i<32; i=i+1) begin
+			//	$spike_get_reg(i);
+			//end
+		end
+		*/
+
+
+		$display("============================================================================");
 	end	
-	`endif //VPI_WRAPPER
 	// ************** Spike custom functions **************************
 
 
@@ -477,9 +511,9 @@ module axi4_memory #(
 		else if (latched_waddr == 32'h1000_0000) begin // PJH: Print log address!!
 			if (1) begin
 				if (32 <= latched_wdata && latched_wdata < 128)
-					$display("[%.2fns] OUT: '%c'  (ADDR=%08x)", $time, latched_wdata[7:0], latched_waddr); // ascii code
+					$display("[%.1f ns] OUT: '%c'  (ADDR=%08x)", $time, latched_wdata[7:0], latched_waddr); // ascii code
 				else
-					$display("[%.2fns]   OUT: %3d    (ADDR=%08x)", $time, latched_wdata, latched_waddr); // \n
+					$display("[%.1f ns]   OUT: %3d    (ADDR=%08x)", $time, latched_wdata, latched_waddr); // \n
 			end
 			else begin
 				$write("%c", latched_wdata[7:0]);
@@ -491,7 +525,7 @@ module axi4_memory #(
 		else if (latched_waddr == 32'h2000_0000) begin //PJH: Maybe test complete address?!
 			if (latched_wdata == 123456789) begin
 				tests_passed = 1;
-				$display("[%.2fns] OUT: %3d    (ADDR=%08x)", $time, latched_wdata, latched_waddr); // \n
+				$display("[%.1f ns] OUT: %3d    (ADDR=%08x)", $time, latched_wdata, latched_waddr); // \n
 			end
 		end
 		else begin
