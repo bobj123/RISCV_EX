@@ -24,3 +24,11 @@
      - To make shared object to use Spike with VPI
   4. make sim
      - Run simulation and check the log results.
+
+
+Edit riscv-isa-sim (Spike) for VPI uses.
+1. Move private function idle() to public in riscv/sim.h
+2. Move private function step() to public in riscv/sim.h
+3. Move private function should_exit() to public in fesvr/htif.h
+4. Add public return function to get device_list in fesvr/htif.h
+  Codes : device_list_t& get_device_list() { return device_list; }

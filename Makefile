@@ -4,7 +4,7 @@ RISCV_GNU_TOOLCHAIN_GIT_REVISION = 411d134
 TOOLCHAIN_PREFIX = $(RISCV_GNU_TOOLCHAIN_INSTALL_PREFIX)/bin/riscv32-unknown-elf-
 #TB_HOME := $(shell pwd)
 #OBJ_DIR = $(TB_HOME)/tests/obj
-TEST_DIR = $(TB_HOME)/tests/$(TEST_NAME)
+#TEST_DIR = $(TB_HOME)/tests/$(TEST_NAME)
 
 
 
@@ -145,9 +145,9 @@ TEST_NAME = arith_basic_test
 # Compilation & Linking
 build:
 	mkdir -p $(TEST_DIR)/obj
-	riscv32-unknown-elf-gcc -static -c -march=rv32im$(subst C,c,$(COMPRESSED_ISA)) -mabi=ilp32 -o $(TEST_DIR)/obj/start.o $(TEST_DIR)/start.S
-	riscv32-unknown-elf-gcc -static -c -march=rv32im$(subst C,c,$(COMPRESSED_ISA)) -mabi=ilp32 -Os -I./tests -o $(TEST_DIR)/obj/print.o $(TEST_DIR)/print.c
-	riscv32-unknown-elf-gcc -static -c -march=rv32im$(subst C,c,$(COMPRESSED_ISA)) -mabi=ilp32 -Os -I./tests -o $(TEST_DIR)/obj/pico_test.o $(TEST_DIR)/pico_test.c
+	riscv32-unknown-elf-gcc -static -c -march=rv32i -mabi=ilp32 -o $(TEST_DIR)/obj/start.o $(TEST_DIR)/start.S
+	riscv32-unknown-elf-gcc -static -c -march=rv32i -mabi=ilp32 -Os -I./tests -o $(TEST_DIR)/obj/print.o $(TEST_DIR)/print.c
+	riscv32-unknown-elf-gcc -static -c -march=rv32i -mabi=ilp32 -Os -I./tests -o $(TEST_DIR)/obj/pico_test.o $(TEST_DIR)/pico_test.c
 	riscv32-unknown-elf-gcc -march=rv32i -mabi=ilp32 -Os -ffreestanding -nostdlib -Wl,--build-id=none,-Bstatic,-T,$(TEST_DIR)/sections.lds,-Map,tests/obj/pico_test.map,--strip-debug \
 								   -I./tests \
 								   -o $(TEST_DIR)/obj/firmware.elf $(TEST_DIR)/obj/start.o $(TEST_DIR)/obj/print.o $(TEST_DIR)/obj/pico_test.o \
@@ -167,9 +167,9 @@ build2:
 	@echo " @ TEST_DIR = $(TEST_DIR)"
 	@echo " @ TOOLCHAIN_PREFIX = $(TOOLCHAIN_PREFIX)"
 	mkdir -p $(TEST_DIR)/obj
-	riscv32-unknown-elf-gcc -static -c -march=rv32im$(subst C,c,$(COMPRESSED_ISA)) -mabi=ilp32 -o $(TEST_DIR)/obj/start.o $(TEST_DIR)/start_JS.S
-	riscv32-unknown-elf-gcc -static -c -march=rv32im$(subst C,c,$(COMPRESSED_ISA)) -mabi=ilp32 -Os -o $(TEST_DIR)/obj/riscv_arithmetic_basic_test_0.o $(TEST_DIR)/riscv_arithmetic_basic_test_0_JS.S
-	riscv32-unknown-elf-gcc -march=rv32im$(subst C,c,$(COMPRESSED_ISA)) -mabi=ilp32 -Os -ffreestanding -nostdlib -Wl,--build-id=none,-Bstatic,-T,$(TEST_DIR)/sections_JS.lds,--strip-debug \
+	riscv32-unknown-elf-gcc -static -c -march=rv32imc -mabi=ilp32 -o $(TEST_DIR)/obj/start.o $(TEST_DIR)/start_JS.S
+	riscv32-unknown-elf-gcc -static -c -march=rv32imc -mabi=ilp32 -Os -o $(TEST_DIR)/obj/riscv_arithmetic_basic_test_0.o $(TEST_DIR)/riscv_arithmetic_basic_test_0_JS.S
+	riscv32-unknown-elf-gcc -march=rv32imc -mabi=ilp32 -Os -ffreestanding -nostdlib -Wl,--build-id=none,-Bstatic,-T,$(TEST_DIR)/sections_JS.lds,--strip-debug \
 								   -I./tests \
 								   -o $(TEST_DIR)/obj/firmware.elf $(TEST_DIR)/obj/start.o $(TEST_DIR)/obj/riscv_arithmetic_basic_test_0.o \
 								   -lc -lgcc
@@ -184,7 +184,7 @@ build2:
 
 spikelog:
 	# instruction log
-	spike -l --log=dump/spike_inst_log --isa=rv32imc /opt/riscv/riscv32-unknown-elf/bin/pk tests/arith_basic_test/obj/firmware.elf
+	spike -l --log=dump/spike_inst_log --isa=rv32imc /opt/riscv/riscv32-unknown-elf/bin/pk $(TEST_DIR)/obj/firmware.elf
 	# reg/mem log
 #spike --log-commits --log=spike_reg_log --isa=RV32IMC /opt/riscv/riscv32-unknown-elf/bin/pk $(TEST_DIR)/obj/firmware.elf
 
@@ -206,7 +206,6 @@ compareall:
 	python3 scripts/showtrace.py dump/testbench.trace tests/arith_basic_test/obj/firmware.elf | tee dump/dut_log
 	python3 scripts/compare.py dump/dut_log dump/spike_conv_inst_log 
 	
-
 libspikeso:
 	# make shared object file
 	g++ scripts/spike_dpi.cc -o scripts/libspike.so -fPIC -shared -std=c++17 \
@@ -220,7 +219,11 @@ libspikeso:
 sim:
 	mkdir -p $(TB_HOME)/dump
 	iverilog -g2012 -o top/testbench.vvp top/testbench.v top/picorv32.v -DVPI_WRAPPER -DCOMPRESSED_ISA
-	vvp -M . -m scripts/libspike top/testbench.vvp +trace +vcd
+	#iverilog -g2012 -o top/testbench.vvp top/testbench.v top/picorv32.v -DVPI_WRAPPER
+	vvp -M . -m scripts/libspike top/testbench.vvp +trace +vcd \
+					+ELF_PATH=$MY_ELF_PATH \
+					+PK_PATH=$MY_PK_PATH \
+					+ISA=$MY_ISA
 
 all:
 	make build2
